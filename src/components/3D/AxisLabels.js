@@ -8,7 +8,7 @@ function AxisLabels() {
       <Text
         position={[5, 0, 0]} // Adjust position as needed
         fontSize={0.5} // Control thickness and size
-        color="red"
+        color="black"//"red"
         anchorX="center" // Center the text alignment
         anchorY="middle"
       >
@@ -19,7 +19,7 @@ function AxisLabels() {
       <Text
         position={[0, 5, 0]} // Adjust position as needed
         fontSize={0.5} // Control thickness and size
-        color="green"
+        color="black"//"green"
         anchorX="center"
         anchorY="middle"
       >
@@ -30,7 +30,7 @@ function AxisLabels() {
       <Text
         position={[0, 0, 5]} // Adjust position as needed
         fontSize={0.5} // Control thickness and size
-        color="blue"
+        color="black"//"blue"
         anchorX="center"
         anchorY="middle"
       >

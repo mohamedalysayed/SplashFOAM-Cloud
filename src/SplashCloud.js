@@ -8,7 +8,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import CustomAxes from "./components/3D/CustomAxes";
 
-function App() {
+function SplashCloud() {
   const fileInputRef = useRef();
   const [fileUrl, setFileUrl] = useState(null);
   const [background, setBackground] = useState("linear-gradient(black, white)");
@@ -56,4 +56,4 @@ function App() {
   );
 }
 
-export default App;
+export default SplashCloud;
