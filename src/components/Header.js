@@ -12,7 +12,7 @@ function Header() {
         color: "#ffffff",
       }}
     >
-      Splash Cloud
+      SplashCloud
     </header>
   );
 }

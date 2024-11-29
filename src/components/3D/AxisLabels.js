@@ -6,7 +6,7 @@ function AxisLabels() {
     <>
       {/* X-Axis Label */}
       <Text
-        position={[5, 0, 0]} // Adjust position as needed
+        position={[2.8, 0, 0]} // Adjust position as needed
         fontSize={0.5} // Control thickness and size
         color="black"//"red"
         anchorX="center" // Center the text alignment
@@ -17,7 +17,7 @@ function AxisLabels() {
 
       {/* Y-Axis Label */}
       <Text
-        position={[0, 5, 0]} // Adjust position as needed
+        position={[0, 2.8, 0]} // Adjust position as needed
         fontSize={0.5} // Control thickness and size
         color="black"//"green"
         anchorX="center"
@@ -28,7 +28,7 @@ function AxisLabels() {
 
       {/* Z-Axis Label */}
       <Text
-        position={[0, 0, 5]} // Adjust position as needed
+        position={[0, 0, 2.8]} // Adjust position as needed
         fontSize={0.5} // Control thickness and size
         color="black"//"blue"
         anchorX="center"

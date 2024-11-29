@@ -1,13 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import SplashCloud from './SplashCloud';
+import MainLandingPage from './MainLandingPage';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <SplashCloud/>
+    {/* Enable routing for SplashCloud */}
+    <BrowserRouter>
+      <Routes>
+        {/* Define the main routes */}
+        <Route path="/" element={<MainLandingPage />} />
+        <Route path="/splashcloud" element={<SplashCloud />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
 
