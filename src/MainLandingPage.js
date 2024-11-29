@@ -171,22 +171,22 @@ function MainLandingPage() {
 
         {/* Get Started Button */}
         <button
-          onClick={() => {
-            console.log("Navigating to /splashcloud"); // Debugging log
-            navigate("/splashcloud");
-          }} // Navigate to the main application
-          style={{
-            padding: "12px 24px",
-            backgroundColor: theme.textColor,
-            color: theme.backgroundColor,
-            border: "none",
-            borderRadius: "5px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          Get Started
+            onClick={() => {
+                console.log("Navigating to /splashcloud"); // Debugging log
+                navigate("/splashcloud");
+            }}
+            style={{
+                padding: "12px 24px",
+                backgroundColor: theme.textColor,
+                color: theme.backgroundColor,
+                border: "none",
+                borderRadius: "5px",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: "pointer",
+            }}
+            >
+            Get Started
         </button>
       </main>
     </div>

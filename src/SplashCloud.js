@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import MainLandingPage from "./MainLandingPage";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei"; // Import Html from drei
 import STLViewer from "./components/3D/STLViewer";
@@ -9,6 +8,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import CustomAxes from "./components/3D/CustomAxes";
 import { generateHelpManual } from "./utils/generateHelpManual";
+import MainLandingPage from "./MainLandingPage";
 
 function SplashCloud() {
   const fileInputRef = useRef(); // Reference for file input
@@ -16,7 +16,7 @@ function SplashCloud() {
   const [background, setBackground] = useState("linear-gradient(black, white)"); // Background style
   const [axesVisible, setAxesVisible] = useState(true); // Toggle visibility of axes
   const controlsRef = useRef(); // Reference for OrbitControls
-  const [showLandingPage, setShowLandingPage] = useState(true); // Flag to show landing page or viewer
+  const [showLandingPage, setShowLandingPage] = useState(false); // Directly show the main application
 
   // Set default camera position to isometric view on mount
   useEffect(() => {
@@ -25,7 +25,7 @@ function SplashCloud() {
       controlsRef.current.target.set(0, 0, 0); // Look at origin
       controlsRef.current.update();
     }
-  }, [controlsRef, fileUrl, showLandingPage]); // Added dependencies
+  }, [controlsRef, fileUrl]);
 
   // Handle file uploads (only accept STL files)
   const handleFileUpload = (event) => {
@@ -47,7 +47,7 @@ function SplashCloud() {
     }
   };
 
-  // Conditional rendering: Show Landing Page or Main Viewer
+  // Conditional rendering: Commenting out landing page logic
   if (showLandingPage) {
     return (
       <MainLandingPage
