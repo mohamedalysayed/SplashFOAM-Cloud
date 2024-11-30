@@ -4,10 +4,16 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import { Box3, Vector3, Mesh } from "three";
 import { Html } from "@react-three/drei";
 
-function STLViewer({ fileUrl }) {
-  const [geometry, setGeometry] = useState(null); // Holds the STL geometry
+function STLViewer({ fileUrl, blockMeshGeometry }) {
+  const [geometry, setGeometry] = useState(null); // Holds the imported STL geometry
   const { camera } = useThree(); // Access the Three.js camera
   const controlsRef = useRef(); // Ref for OrbitControls
+
+  // Debugging: Log the provided props
+  useEffect(() => {
+    console.log("STL file URL:", fileUrl);
+    console.log("BlockMesh geometry:", blockMeshGeometry);
+  }, [fileUrl, blockMeshGeometry]);
 
   useEffect(() => {
     if (fileUrl) {
@@ -28,7 +34,7 @@ function STLViewer({ fileUrl }) {
           // Center the geometry at the origin
           geometry.translate(-center.x, -center.y, -center.z);
 
-          // Set camera to an isometric view
+          // Set camera to an isometric view for STL geometry
           const distance = maxAxis * 3; // Zoomed-out distance (adjustable)
           camera.position.set(distance, distance, distance); // Isometric diagonal view
           camera.near = distance / 100; // Adjust near clipping plane
@@ -52,18 +58,40 @@ function STLViewer({ fileUrl }) {
     }
   }, [fileUrl, camera]);
 
-  // If no geometry is loaded, show a message
-  return geometry ? (
-    <mesh geometry={geometry}>
-      {/* Standard material for the mesh */}
-      <meshStandardMaterial color="gray" metalness={0.8} roughness={0.2} />
-    </mesh>
-  ) : (
-    <Html>
-      <div style={{ color: "red", fontSize: "16px", textAlign: "center" }}>
-        No file loaded
-      </div>
-    </Html>
+  return (
+    <>
+      {/* Render the imported STL geometry if available */}
+      {geometry ? (
+        <mesh geometry={geometry}>
+          <meshStandardMaterial color="gray" metalness={0.8} roughness={0.2} />
+        </mesh>
+      ) : (
+        <Html>
+          <div style={{ color: "red", fontSize: "16px", textAlign: "center" }}>
+            No STL file loaded
+          </div>
+        </Html>
+      )}
+
+      {/* Render the dynamic blockMesh if blockMeshGeometry is provided */}
+      {blockMeshGeometry && blockMeshGeometry.domain && (
+        <mesh>
+          <boxGeometry
+            args={[
+              blockMeshGeometry.domain.maxx - blockMeshGeometry.domain.minx,
+              blockMeshGeometry.domain.maxy - blockMeshGeometry.domain.miny,
+              blockMeshGeometry.domain.maxz - blockMeshGeometry.domain.minz,
+            ]}
+          />
+          <meshStandardMaterial
+            color="cyan"
+            transparent
+            opacity={0.5}
+            wireframe
+          />
+        </mesh>
+      )}
+    </>
   );
 }
 
