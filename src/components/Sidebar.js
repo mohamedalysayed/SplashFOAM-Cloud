@@ -24,7 +24,8 @@ function Sidebar({
         background: "#000000", // Fully black background
         boxShadow: "0 0 0 rgba(0, 0, 0, 0)", // Removed any visible shadow or edges
         borderRadius: "0px", // Removed rounding for seamless integration
-        overflowY: "auto", // Enable vertical scrolling if needed
+        overflowY: "auto", // Enable vertical scrolling
+        maxHeight: "100vh", // Restrict sidebar height to viewport height
       }}
     >
       {/* Import Geometry */}

@@ -107,25 +107,37 @@ function SplashCloud() {
           <OrbitControls ref={controlsRef} enableRotate enablePan enableZoom makeDefault />
 
           {/* STL File Viewer */}
-          {fileUrl && <STLViewer fileUrl={fileUrl} blockMeshGeometry={meshParams} />}
+          {fileUrl && (
+            <>
+              {console.log("Rendering STL file:", fileUrl)}
+              <STLViewer fileUrl={fileUrl} blockMeshGeometry={meshParams} />
+            </>
+          )}
 
           {/* Dynamic BlockMesh Visualization */}
           {meshParams && meshParams.domain && (
-            <mesh>
-              <boxGeometry
-                args={[
-                  meshParams.domain.maxx - meshParams.domain.minx,
-                  meshParams.domain.maxy - meshParams.domain.miny,
-                  meshParams.domain.maxz - meshParams.domain.minz,
-                ]}
-              />
-              <meshStandardMaterial
-                color="cyan"
-                transparent
-                opacity={0.5}
-                wireframe
-              />
-            </mesh>
+            <>
+              {console.log("Rendering blockMesh with dimensions:", {
+                width: meshParams.domain.maxx - meshParams.domain.minx,
+                height: meshParams.domain.maxy - meshParams.domain.miny,
+                depth: meshParams.domain.maxz - meshParams.domain.minz,
+              })}
+              <mesh position={[5, 0, 0]}> {/* Offset to avoid overlap */}
+                <boxGeometry
+                  args={[
+                    meshParams.domain.maxx - meshParams.domain.minx,
+                    meshParams.domain.maxy - meshParams.domain.miny,
+                    meshParams.domain.maxz - meshParams.domain.minz,
+                  ]}
+                />
+                <meshStandardMaterial
+                  color="cyan"
+                  transparent
+                  opacity={0.5}
+                  wireframe
+                />
+              </mesh>
+            </>
           )}
         </Canvas>
       </div>
