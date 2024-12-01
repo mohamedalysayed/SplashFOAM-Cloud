@@ -3,9 +3,9 @@ import React from "react";
 function ReferenceBox() {
   return (
     <mesh>
-      <boxGeometry args= {[5, 5, 5]} />
-      <meshBasicMaterial color="white" wireframe opacity={0.0} transparent />
-      {/* <meshBasicMaterial color="grey" wireframe opacity={0.5} transparent /> */}
+      <boxGeometry args={[8, 8, 8]} />
+      {/* Use solid material for the box */}
+      <meshBasicMaterial color="grey" opacity={0.1} transparent />
     </mesh>
   );
 }

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import MeshParameters from "../CaseGeneration/MeshParameters"; // Import MeshParameters
 import PhysicalModels from "../CaseGeneration/PhysicalModels"; // Import PhysicalModels
 import GenerateCase from "../CaseGeneration/GenerateCase"; // Import GenerateCase
+import BlockMesh from "../CaseGeneration/BlockMesh"; // Import BlockMesh
+import SimulationSetup from "../CaseGeneration/SimulationSetup"; // Setup simulation for run 
 
 function Sidebar({
   fileInputRef,
@@ -10,11 +12,14 @@ function Sidebar({
   handleFileUpload,
   handleResetCamera,
   handleDownloadManual,
+  handleGenerateCase,
 }) {
   const [profileMenuVisible, setProfileMenuVisible] = useState(false); // Toggles Profile dropdown
   const [meshParametersVisible, setMeshParametersVisible] = useState(false); // Toggles Mesh Parameters section
   const [physicalModelsVisible, setPhysicalModelsVisible] = useState(false); // Toggles Physical Models section
-  const [generateCaseVisible, setGenerateCaseVisible] = useState(false); // Toggles Generate Case section
+  const [blockMeshVisible, setBlockMeshVisible] = useState(false); // Toggles Generate Case section
+  const [simulationSetupVisible, setSimulationSetupVisible] = useState(false); // Toggles Generate Case section
+
 
   return (
     <div
@@ -49,6 +54,41 @@ function Sidebar({
       >
         Import Geometry
       </button>
+{/* BlockMesh Tester */}
+<button
+        onClick={() => setBlockMeshVisible((prev) => !prev)}
+        style={{
+          width: "100%",
+          padding: "12px",
+          marginBottom: "15px",
+          background: "cyan", // Unified button color
+          color: "black",
+          border: "none",
+          borderRadius: "8px",
+          fontWeight: "bold",
+          cursor: "pointer",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          transition: "background 0.3s",
+        }}
+        onMouseEnter={(e) => (e.target.style.background = "#00c9d9")}
+        onMouseLeave={(e) => (e.target.style.background = "cyan")}
+      >
+        BlockMesh (Testeing) {blockMeshVisible ? "▲" : "▼"}
+      </button>
+      {blockMeshVisible && (
+        <div
+          style={{
+            padding: "15px",
+            border: "1px solid #ddd",
+            borderRadius: "15px", // Chamfered edges for smooth visuals
+            background: "#f8f9fa",
+            marginBottom: "15px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Slight shadow for definition
+          }}
+        >
+          <BlockMesh />
+        </div>
+      )}
 
       {/* Mesh Parameters */}
       <button
@@ -122,9 +162,9 @@ function Sidebar({
         </div>
       )}
 
-      {/* Generate Case */}
-      <button
-        onClick={() => setGenerateCaseVisible((prev) => !prev)}
+{/* Configure Simulation Setup */}
+<button
+        onClick={() => setSimulationSetupVisible((prev) => !prev)}
         style={{
           width: "100%",
           padding: "12px",
@@ -141,9 +181,9 @@ function Sidebar({
         onMouseEnter={(e) => (e.target.style.background = "#00c9d9")}
         onMouseLeave={(e) => (e.target.style.background = "cyan")}
       >
-        Generate Case {generateCaseVisible ? "▲" : "▼"}
+        Simulation Setup {simulationSetupVisible ? "▲" : "▼"}
       </button>
-      {generateCaseVisible && (
+      {simulationSetupVisible && (
         <div
           style={{
             padding: "15px",
@@ -154,9 +194,56 @@ function Sidebar({
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Slight shadow for definition
           }}
         >
-          <GenerateCase />
+          <SimulationSetup />
         </div>
       )}
+      
+      {/* Generate Case */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center", // Center the button horizontally
+          marginBottom: "15px", // Add spacing at the bottom
+        }}
+      >
+        <button
+          onClick={handleGenerateCase} // Trigger the Generate Case functionality
+          style={{
+            width: "90%",
+            padding: "12px",
+            background: "gray", // Default button color
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Subtle shadow
+            transition: "background 0.3s, color 0.3s, transform 0.2s, box-shadow 0.2s", // Smooth transitions
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "lightcyan"; // Change background color
+            e.target.style.color = "black"; // Change text color
+            e.target.style.transform = "scale(1.1)"; // Slight zoom
+            e.target.style.boxShadow = "0 8px 12px rgba(0, 0, 0, 0.2)"; // Add deeper shadow
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "gray"; // Reset background color
+            e.target.style.color = "white"; // Reset text color
+            e.target.style.transform = "scale(1)"; // Reset zoom
+            e.target.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)"; // Reset shadow
+          }}
+          onMouseDown={(e) => {
+            e.target.style.transform = "scale(0.95)"; // Button press effect
+            e.target.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)"; // Reduce shadow on press
+          }}
+          onMouseUp={(e) => {
+            e.target.style.transform = "scale(1.1)"; // Return to hover zoom
+            e.target.style.boxShadow = "0 8px 12px rgba(0, 0, 0, 0.2)"; // Return hover shadow
+          }}
+        >
+          Generate Case
+        </button>
+      </div>
 
       {/* Divider */}
       <hr

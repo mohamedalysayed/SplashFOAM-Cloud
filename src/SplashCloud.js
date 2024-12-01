@@ -14,7 +14,6 @@ function SplashCloud() {
   const [fileUrl, setFileUrl] = useState(null); // URL for STL file
   const [background, setBackground] = useState("black"); // Default background
   const [axesVisible, setAxesVisible] = useState(true); // Toggles axes visibility
-  const [meshParams, setMeshParams] = useState(null); // Parameters for dynamic blockMesh
   const controlsRef = useRef();
 
   // Initialize the camera position and handle resizing
@@ -62,12 +61,6 @@ function SplashCloud() {
     }
   };
 
-  // Handle mesh parameters update
-  const handleMeshParamsUpdate = (newMeshParams) => {
-    console.log("Updated mesh parameters:", newMeshParams); // Debugging
-    setMeshParams(newMeshParams); // Set new blockMesh parameters
-  };
-
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <Header backToLanding />
@@ -80,7 +73,6 @@ function SplashCloud() {
           handleFileUpload={handleFileUpload} // Handle file uploads
           handleResetCamera={handleResetCamera} // Reset camera
           handleDownloadManual={generateHelpManual} // Download manual
-          onMeshParamsUpdate={handleMeshParamsUpdate} // Callback for mesh parameter updates
         />
         <Canvas
           style={{
@@ -110,33 +102,7 @@ function SplashCloud() {
           {fileUrl && (
             <>
               {console.log("Rendering STL file:", fileUrl)}
-              <STLViewer fileUrl={fileUrl} blockMeshGeometry={meshParams} />
-            </>
-          )}
-
-          {/* Dynamic BlockMesh Visualization */}
-          {meshParams && meshParams.domain && (
-            <>
-              {console.log("Rendering blockMesh with dimensions:", {
-                width: meshParams.domain.maxx - meshParams.domain.minx,
-                height: meshParams.domain.maxy - meshParams.domain.miny,
-                depth: meshParams.domain.maxz - meshParams.domain.minz,
-              })}
-              <mesh position={[5, 0, 0]}> {/* Offset to avoid overlap */}
-                <boxGeometry
-                  args={[
-                    meshParams.domain.maxx - meshParams.domain.minx,
-                    meshParams.domain.maxy - meshParams.domain.miny,
-                    meshParams.domain.maxz - meshParams.domain.minz,
-                  ]}
-                />
-                <meshStandardMaterial
-                  color="cyan"
-                  transparent
-                  opacity={0.5}
-                  wireframe
-                />
-              </mesh>
+              <STLViewer fileUrl={fileUrl} />
             </>
           )}
         </Canvas>
