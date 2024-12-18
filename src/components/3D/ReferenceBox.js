@@ -5,7 +5,7 @@ function ReferenceBox() {
     <mesh>
       <boxGeometry args={[8, 8, 8]} />
       {/* Use solid material for the box */}
-      <meshBasicMaterial color="grey" opacity={0.1} transparent />
+      <meshBasicMaterial color="grey" opacity={0.0} transparent />
     </mesh>
   );
 }

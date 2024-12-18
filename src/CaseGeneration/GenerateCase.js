@@ -36,15 +36,15 @@ function GenerateCase({ meshParams, physicalModels, simulationParams }) {
       }}
     >
       {/* Description */}
-      <h1
+      {/* <h1
         style={{
           textAlign: "center",
           marginBottom: "20px",
         }}
       >
         Generate Case
-      </h1>
-      <p
+      </h1> */}
+      {/* <p
         style={{
           textAlign: "center",
           marginBottom: "20px",
@@ -52,7 +52,7 @@ function GenerateCase({ meshParams, physicalModels, simulationParams }) {
       >
         Collects all the user-input parameters from MeshParameters, PhysicalModels, 
         and SimulationSetup to create a unified YAML file for OpenFOAM case generation.
-      </p>
+      </p> */}
       {/* Button to trigger YAML generation and download */}
       <div
         style={{

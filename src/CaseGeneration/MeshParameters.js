@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import YAML from "yaml";
+import React, { useState, useEffect } from "react";
 
-function MeshParameters() {
-  const [meshParams, setMeshParams] = useState({
+function MeshParameters({ setMeshParams }) {
+  // State for Mesh Parameters
+  const [meshParams, setLocalMeshParams] = useState({
     name: "meshSettings",
     scale: 1.0,
     domain: {
@@ -19,79 +19,22 @@ function MeshParameters() {
     patches: [
       { name: "inlet", type: "patch", faces: [0, 4, 7, 3] },
       { name: "outlet", type: "patch", faces: [1, 5, 6, 2] },
-      { name: "front", type: "wall", faces: [0, 1, 5, 4] },
-      { name: "back", type: "wall", faces: [2, 3, 7, 6] },
-      { name: "bottom", type: "wall", faces: [0, 1, 2, 3] },
-      { name: "top", type: "wall", faces: [4, 5, 6, 7] },
     ],
     snappyHexSteps: {
       castellatedMesh: "true",
       snap: "true",
       addLayers: "true",
     },
-    geometry: [],
-    castellatedMeshControls: {
-      maxLocalCells: 2000000,
-      maxGlobalCells: 5000000,
-      minRefinementCells: 5,
-      maxLoadUnbalance: 0.1,
-      nCellsBetweenLevels: 5,
-      features: [],
-      refinementSurfaces: [],
-      resolveFeatureAngle: 30,
-      refinementRegions: [],
-      locationInMesh: [0, 0, 0],
-      allowFreeStandingZoneFaces: "true",
-    },
-    snapControls: {
-      nSmoothPatch: 3,
-      tolerance: 2.0,
-      nSolveIter: 100,
-      nRelaxIter: 8,
-      nFeatureSnapIter: 10,
-      implicitFeatureSnap: "false",
-      explicitFeatureSnap: "true",
-      multiRegionFeatureSnap: "false",
-    },
-    addLayersControls: {
-      relativeSizes: "true",
-      expansionRatio: 1.2,
-      finalLayerThickness: 0.3,
-      minThickness: 0.001,
-      nGrow: 0,
-      featureAngle: 180,
-      nRelaxIter: 5,
-      nSmoothSurfaceNormals: 1,
-      nSmoothNormals: 3,
-      nSmoothThickness: 10,
-      maxFaceThicknessRatio: 0.5,
-      maxThicknessToMedialRatio: 0.3,
-      minMedianAxisAngle: 90,
-      nBufferCellsNoExtrude: 0,
-      nLayerIter: 10,
-    },
-    meshQualityControls: {
-      maxNonOrtho: 75,
-      maxBoundarySkewness: 4,
-      maxInternalSkewness: 4,
-      maxConcave: 180,
-      minTetQuality: 1.0e-30,
-      minVol: 1.0e-30,
-      minArea: 1.0e-30,
-      minTwist: 0.001,
-      minDeterminant: 0.001,
-      minFaceWeight: 0.01,
-      minVolRatio: 0.01,
-      minTriangleTwist: -1,
-      nSmoothScale: 4,
-      errorReduction: 0.75,
-    },
-    mergeTolerance: 1.0e-06,
-    debug: 0,
   });
 
+  // Synchronize local state with parent state
+  useEffect(() => {
+    setMeshParams(meshParams);
+  }, [meshParams, setMeshParams]);
+
+  // Handle input changes dynamically
   const handleInputChange = (field, value, subField) => {
-    setMeshParams((prev) => {
+    setLocalMeshParams((prev) => {
       if (subField) {
         return {
           ...prev,
@@ -102,28 +45,38 @@ function MeshParameters() {
     });
   };
 
-  const handleDownloadYaml = () => {
-    const yamlStr = YAML.stringify({ meshSettings: meshParams });
-    const blob = new Blob([yamlStr], { type: "text/yaml" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "meshSettings.yaml";
-    link.click();
+  // Add a new patch dynamically
+  const handleAddPatch = () => {
+    setLocalMeshParams((prev) => ({
+      ...prev,
+      patches: [
+        ...prev.patches,
+        { name: "newPatch", type: "patch", faces: [] }, // Default new patch
+      ],
+    }));
+  };
+
+  // Remove a patch dynamically
+  const handleRemovePatch = (index) => {
+    setLocalMeshParams((prev) => ({
+      ...prev,
+      patches: prev.patches.filter((_, i) => i !== index),
+    }));
   };
 
   return (
     <div
       style={{
-        maxHeight: "500px", // Scrollable area
+        maxHeight: "500px",
         overflowY: "auto",
         padding: "15px",
         border: "1px solid #ddd",
-        borderRadius: "15px", // Chamfered edges for smooth visuals
+        borderRadius: "15px",
         background: "#f8f9fa",
       }}
     >
       <h2 style={{ textAlign: "center", color: "black", marginBottom: "20px" }}>
-        blockMesh
+        Mesh Parameters
       </h2>
 
       {/* Mesh Name */}
@@ -133,14 +86,7 @@ function MeshParameters() {
           type="text"
           value={meshParams.name}
           onChange={(e) => handleInputChange("name", e.target.value)}
-          style={{
-            marginLeft: "10px",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            width: "80%",
-            marginBottom: "10px",
-          }}
+          style={inputStyle}
         />
       </div>
 
@@ -151,163 +97,87 @@ function MeshParameters() {
           type="number"
           value={meshParams.scale}
           onChange={(e) =>
-            handleInputChange("scale", parseFloat(e.target.value))
+            handleInputChange("scale", parseFloat(e.target.value) || 1.0)
           }
-          style={{
-            marginLeft: "10px",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            width: "80%",
-            marginBottom: "10px",
-          }}
+          style={inputStyle}
         />
       </div>
 
       {/* Domain Specifications */}
-      <h3>Domain Specs</h3>
-      {["minx", "maxx", "miny", "maxy", "minz", "maxz", "nx", "ny", "nz"].map(
-        (field) => (
-          <div key={field}>
-            <label>{field}:</label>
-            <input
-              type="number"
-              value={meshParams.domain[field]}
-              onChange={(e) =>
-                handleInputChange("domain", parseFloat(e.target.value), field)
-              }
-              style={{
-                marginLeft: "10px",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid #ddd",
-                width: "80%",
-                marginBottom: "10px",
-              }}
-            />
-          </div>
-        )
-      )}
+      <h3>Domain</h3>
+      {Object.keys(meshParams.domain).map((key) => (
+        <div key={key}>
+          <label>{key}:</label>
+          <input
+            type="number"
+            value={meshParams.domain[key]}
+            onChange={(e) =>
+              handleInputChange("domain", parseFloat(e.target.value) || 0, key)
+            }
+            style={inputStyle}
+          />
+        </div>
+      ))}
 
       {/* Patches */}
       <h3>Patches</h3>
       {meshParams.patches.map((patch, index) => (
-        <div key={index}>
-          <label>Patch Name:</label>
+        <div key={index} style={{ marginBottom: "10px" }}>
+          <label>Patch {index + 1} Name:</label>
           <input
             type="text"
             value={patch.name}
-            onChange={(e) =>
-              setMeshParams((prev) => {
-                const updatedPatches = [...prev.patches];
-                updatedPatches[index].name = e.target.value;
-                return { ...prev, patches: updatedPatches };
-              })
-            }
+            onChange={(e) => {
+              const updatedPatches = [...meshParams.patches];
+              updatedPatches[index].name = e.target.value;
+              setLocalMeshParams((prev) => ({
+                ...prev,
+                patches: updatedPatches,
+              }));
+            }}
+            style={inputStyle}
+          />
+          <button
+            onClick={() => handleRemovePatch(index)}
             style={{
               marginLeft: "10px",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-              width: "80%",
-              marginBottom: "10px",
+              padding: "5px 10px",
+              background: "red",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
             }}
-          />
-          <label>Type:</label>
-          <input
-            type="text"
-            value={patch.type}
-            onChange={(e) =>
-              setMeshParams((prev) => {
-                const updatedPatches = [...prev.patches];
-                updatedPatches[index].type = e.target.value;
-                return { ...prev, patches: updatedPatches };
-              })
-            }
-            style={{
-              marginLeft: "10px",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-              width: "80%",
-              marginBottom: "10px",
-            }}
-          />
+          >
+            Remove
+          </button>
         </div>
       ))}
-
-      {/* SnappyHexMesh Section */}
-      <h3>SnappyHexMesh Parameters</h3>
-      {Object.keys(meshParams.snappyHexSteps).map((field) => (
-        <div key={field}>
-          <label>{field}:</label>
-          <input
-            type="text"
-            value={meshParams.snappyHexSteps[field]}
-            onChange={(e) =>
-              handleInputChange("snappyHexSteps", e.target.value, field)
-            }
-            style={{
-              marginLeft: "10px",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-              width: "80%",
-              marginBottom: "10px",
-            }}
-          />
-        </div>
-      ))}
-
-      {/* Other Sections */}
-      {["castellatedMeshControls", "snapControls", "addLayersControls", "meshQualityControls"].map(
-        (section) => (
-          <div key={section}>
-            <h4>{section}</h4>
-            {Object.keys(meshParams[section]).map((field) => (
-              <div key={field}>
-                <label>{field}:</label>
-                <input
-                  type="text"
-                  value={meshParams[section][field]}
-                  onChange={(e) =>
-                    handleInputChange(section, e.target.value, field)
-                  }
-                  style={{
-                    marginLeft: "10px",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    border: "1px solid #ddd",
-                    width: "80%",
-                    marginBottom: "10px",
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        )
-      )}
-
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-        <button
-          onClick={handleDownloadYaml}
-          style={{
-            padding: "10px 20px",
-            background: "cyan",
-            color: "black",
-            fontWeight: "bold",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.6)",
-            transition: "transform 0.3s",
-          }}
-        >
-          Download Mesh Settings (.yaml)
-        </button>
-      </div>
+      <button
+        onClick={handleAddPatch}
+        style={{
+          marginTop: "10px",
+          padding: "8px",
+          background: "green",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+        }}
+      >
+        Add Patch
+      </button>
     </div>
   );
 }
+
+const inputStyle = {
+  marginLeft: "10px",
+  padding: "8px",
+  borderRadius: "4px",
+  border: "1px solid #ddd",
+  width: "80%",
+  marginBottom: "10px",
+};
 
 export default MeshParameters;
