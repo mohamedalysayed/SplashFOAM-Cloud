@@ -10,9 +10,9 @@ function Sidebar({
   handleFileUpload,
   handleResetCamera,
   handleDownloadManual,
-  setMeshParams, // Update mesh parameters state in parent
-  setPhysicalModels, // Update physical models state in parent
-  setSimulationParams, // Update simulation parameters state in parent
+  setMeshParams,
+  setPhysicalModels,
+  setSimulationParams,
 }) {
   // Dropdown visibility states
   const [meshParametersVisible, setMeshParametersVisible] = useState(false);
@@ -75,6 +75,7 @@ function Sidebar({
           <SimulationSetup setSimulationParams={setSimulationParams} />
         </div>
       )}
+      <div style={separatorStyle}></div>
 
       {/* Download Manual */}
       <button
@@ -123,7 +124,25 @@ const buttonStyle = {
   fontWeight: "bold",
   cursor: "pointer",
   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-  transition: "background 0.3s",
+  transition: "transform 0.3s ease, background 0.3s ease",
+};
+
+// Adding hover effect to zoom in the button
+const hoverEffect = `
+  button:hover {
+    transform: scale(1.05); /* Zoom effect */
+    background: lightblue; /* Change background color */
+  }
+`;
+
+// Injecting the hoverEffect CSS into the DOM
+const styleElement = document.createElement("style");
+styleElement.innerText = hoverEffect;
+document.head.appendChild(styleElement);
+
+const separatorStyle = {
+  borderTop: "2px solid #555",
+  margin: "20px 0",
 };
 
 const dropdownStyle = {

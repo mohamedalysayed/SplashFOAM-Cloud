@@ -9,20 +9,19 @@ import Sidebar from "./components/Sidebar";
 import CustomAxes from "./components/3D/CustomAxes";
 import { generateHelpManual } from "./utils/generateHelpManual";
 import GenerateCase from "./CaseGeneration/GenerateCase";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 function SplashCloud() {
   const fileInputRef = useRef();
   const controlsRef = useRef();
-  const canvasRef = useRef();
+  //const canvasRef = useRef();
+  const glRef = useRef(null); // Ref to store WebGL renderer
 
   const [fileUrl, setFileUrl] = useState(null);
-  const [background, setBackground] = useState("linear-gradient(black, gray)");
+  const [background, setBackground] = useState("black");
   const [axesVisible, setAxesVisible] = useState(true);
   const [meshParams, setMeshParams] = useState({});
   const [physicalModels, setPhysicalModels] = useState({});
   const [simulationParams, setSimulationParams] = useState({});
-  const [uploadStatus, setUploadStatus] = useState("");
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -31,6 +30,26 @@ function SplashCloud() {
       controlsRef.current.update();
     }
   }, []);
+
+  // Define gradient mappings
+  const gradientMap = {
+    "gradient-cyan-black": "linear-gradient(to bottom, #00CED1, #000000)", // Cyan to Black
+  };
+  
+  // Update WebGL background dynamically when "background" changes
+  useEffect(() => {
+    if (glRef.current) {
+      if (background.startsWith("gradient")) {
+        glRef.current.setClearColor("transparent");
+        document.body.style.background = gradientMap[background]; // Apply gradient
+      } else {
+        glRef.current.setClearColor(background);
+        document.body.style.background = "none"; // Remove gradient
+      }
+    }
+  }, [background, gradientMap]); // Add gradientMap to the dependency array
+  
+  
 
   // Handle STL upload
   const handleFileUpload = (event) => {
@@ -63,53 +82,26 @@ function SplashCloud() {
 
   // Save Screenshot
   const saveScreenshot = () => {
-    const canvas = canvasRef.current.querySelector("canvas");
-    if (canvas) {
+    const gl = glRef.current; // Access the WebGL renderer
+
+    if (gl) {
+      const canvas = gl.domElement; // The WebGL canvas
       const format = prompt("Enter format (png, jpeg, webp):", "png");
+
       if (["png", "jpeg", "webp"].includes(format)) {
-        canvas.toBlob((blob) => {
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = `screenshot.${format}`;
-          link.click();
-        }, `image/${format}`);
+        // Convert the canvas content to a data URL
+        const dataURL = canvas.toDataURL(`image/${format}`);
+
+        // Trigger download
+        const link = document.createElement("a");
+        link.href = dataURL;
+        link.download = `screenshot.${format}`;
+        link.click();
       } else {
         alert("Invalid format! Use png, jpeg, or webp.");
       }
-    }
-  };
-
-  // Upload YAML to AWS S3
-  const uploadToAWS = async () => {
-    setUploadStatus("Uploading...");
-    const s3 = new S3Client({
-      region: "eu-north-1",
-      credentials: {
-        accessKeyId: "AKIAEXAMPLE1234567890",
-        secretAccessKey: "wJalrXUtnFEXAMPLEKEY/bPxRfiCYEXAMPLEKEY",
-      },
-    });
-
-    const yamlData = JSON.stringify({
-      meshParams,
-      physicalModels,
-      simulationParams,
-    });
-
-    const params = {
-      Bucket: "your-s3-bucket-name",
-      Key: "generated_case.yaml",
-      Body: yamlData,
-      ContentType: "application/x-yaml",
-    };
-
-    try {
-      const command = new PutObjectCommand(params);
-      await s3.send(command);
-      setUploadStatus("Upload successful!");
-    } catch (error) {
-      console.error("AWS Upload Error:", error);
-      setUploadStatus("Upload failed!");
+    } else {
+      alert("Failed to access the renderer. Ensure the scene is loaded.");
     }
   };
 
@@ -117,21 +109,32 @@ function SplashCloud() {
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <Header backToLanding />
       <div style={{ padding: "10px", background: "#000", color: "white", display: "flex", justifyContent: "flex-end" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <select onChange={(e) => setBackground(e.target.value)} style={selectStyle}>
-            <option value="linear-gradient(black, gray)">Black to Gray</option>
-            <option value="black">Black</option>
-            <option value="lightgray">Light Gray</option>
-            <option value="linear-gradient(blue, white)">Blue to White</option>
-            <option value="linear-gradient(green, black)">Green to Black</option>
-            <option value="linear-gradient(orange, yellow)">Orange to Yellow</option>
-            <option value="white">White</option>
-          </select>
-          <button onClick={saveScreenshot} style={screenshotButtonStyle}>Save Snapshot</button>
-          <button onClick={uploadToAWS} style={awsButtonStyle}>Upload to AWS</button>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <select
+        onChange={(e) => setBackground(e.target.value)}
+        style={selectStyle}
+      >
+        <optgroup label="Solid Colors">
+          <option value="black">Black</option>
+          <option value="#2F4F4F">Dark Slate Gray</option>
+          <option value="#FFFFFF">White</option>
+        </optgroup>
+        <optgroup label="Gradients">
+          <option value="gradient-cyan-black">Cyan to Black</option>
+        </optgroup>
+      </select>
+        <button onClick={saveScreenshot} style={screenshotButtonStyle}>Save Snapshot</button>
       </div>
-      <div style={{ flex: 1, display: "flex", position: "relative" }} ref={canvasRef}>
+      </div>
+      
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          position: "relative",
+          background: gradientMap[background] || background, // Apply solid or gradient background
+        }}
+      >
         <Sidebar
           fileInputRef={fileInputRef}
           setBackground={setBackground}
@@ -143,7 +146,17 @@ function SplashCloud() {
           setPhysicalModels={setPhysicalModels}
           setSimulationParams={setSimulationParams}
         />
-        <Canvas style={{ flex: 1, width: "100%", height: "100%", background }}>
+        <Canvas
+          onCreated={({ gl }) => {
+            glRef.current = gl;
+            gl.setClearColor("transparent"); // Transparent to show the gradient
+          }}
+          style={{
+            flex: 1,
+            width: "100%",
+            height: "100%",
+          }}
+        >
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} intensity={1.5} />
           <gridHelper args={[8, 16]} />
@@ -162,15 +175,40 @@ function SplashCloud() {
           </div>
         </div>
       </div>
-      <p style={{ textAlign: "center", color: "white" }}>{uploadStatus}</p>
     </div>
   );
 }
-
 const selectStyle = { padding: "5px", borderRadius: "4px" };
-const screenshotButtonStyle = { padding: "8px 12px", background: "darkcyan", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
-const awsButtonStyle = { padding: "8px 12px", background: "darkorange", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
+//const screenshotButtonStyle = { padding: "8px 12px", background: "darkcyan", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
 const buttonContainerStyle = { position: "absolute", bottom: 20, right: 20, display: "flex", flexDirection: "column", gap: "10px" };
 const viewButtonStyle = { padding: "8px 12px", background: "gray", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
 
+const screenshotButtonStyle = {
+  padding: "12px 20px", // Increased padding for prominence
+  background: "linear-gradient(to right, #ff7e5f, #feb47b)", // Gradient background
+  color: "white",
+  border: "none",
+  borderRadius: "10px",
+  fontWeight: "bold",
+  cursor: "pointer",
+  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)", // Soft shadow
+  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+};
+
+// Add hover and active styles dynamically
+const hoverEffect = `
+  button:hover {
+    transform: scale(1.05); /* Zoom effect */
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4); /* Enhanced shadow */
+  }
+  button:active {
+    transform: scale(0.95); /* Slight press effect */
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2); /* Reduced shadow */
+  }
+`;
+
+// Injecting hoverEffect into the DOM
+const styleElement = document.createElement("style");
+styleElement.innerText = hoverEffect;
+document.head.appendChild(styleElement);
 export default SplashCloud;
