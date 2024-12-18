@@ -9,60 +9,40 @@ import Sidebar from "./components/Sidebar";
 import CustomAxes from "./components/3D/CustomAxes";
 import { generateHelpManual } from "./utils/generateHelpManual";
 import GenerateCase from "./CaseGeneration/GenerateCase";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 function SplashCloud() {
-  // References for file input and camera controls
   const fileInputRef = useRef();
   const controlsRef = useRef();
-  const canvasRef = useRef(); // Reference for the canvas element to capture screenshots
+  const canvasRef = useRef();
 
-  // State for STL file URL
   const [fileUrl, setFileUrl] = useState(null);
-
-  // State for canvas background and axes visibility
-  const [background, setBackground] = useState("linear-gradient(black, gray)"); // Default background
+  const [background, setBackground] = useState("linear-gradient(black, gray)");
   const [axesVisible, setAxesVisible] = useState(true);
-
-  // States for YAML aggregation (Mesh, Physical Models, and Simulation Parameters)
   const [meshParams, setMeshParams] = useState({});
   const [physicalModels, setPhysicalModels] = useState({});
   const [simulationParams, setSimulationParams] = useState({});
+  const [uploadStatus, setUploadStatus] = useState("");
 
-  // Camera setup and resize handler
   useEffect(() => {
     if (controlsRef.current) {
       controlsRef.current.object.position.set(10, 10, 10);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
-
-    const handleResize = () => {
-      const canvas = document.querySelector("canvas");
-      if (canvas && controlsRef.current) {
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        controlsRef.current.object.aspect = width / height;
-        controlsRef.current.object.updateProjectionMatrix();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle STL file upload and set URL
+  // Handle STL upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file && file.name.endsWith(".stl")) {
-      const url = URL.createObjectURL(file);
-      setFileUrl(url);
-      console.log("STL file uploaded:", file.name);
+      setFileUrl(URL.createObjectURL(file));
     } else {
       alert("Unsupported file type. Please upload an STL file.");
     }
   };
 
-  // Reset camera to its default position
+  // Reset camera
   const handleResetCamera = () => {
     if (controlsRef.current) {
       controlsRef.current.object.position.set(5, 5, 5);
@@ -71,63 +51,74 @@ function SplashCloud() {
     }
   };
 
-  // Adjust camera to align to X, Y, or Z view
+  // Set camera view
   const handleSetView = (axis) => {
+    const positions = { X: [10, 0, 0], Y: [0, 10, 0], Z: [0, 0, 10] };
     if (controlsRef.current) {
-      switch (axis) {
-        case "X":
-          controlsRef.current.object.position.set(10, 0, 0);
-          break;
-        case "Y":
-          controlsRef.current.object.position.set(0, 10, 0);
-          break;
-        case "Z":
-          controlsRef.current.object.position.set(0, 0, 10);
-          break;
-        default:
-          break;
-      }
+      controlsRef.current.object.position.set(...positions[axis]);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
   };
 
-  // Save Screenshot Functionality
+  // Save Screenshot
   const saveScreenshot = () => {
     const canvas = canvasRef.current.querySelector("canvas");
     if (canvas) {
-      // Ask user for format selection
       const format = prompt("Enter format (png, jpeg, webp):", "png");
       if (["png", "jpeg", "webp"].includes(format)) {
-        canvas.toBlob(
-          (blob) => {
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `screenshot.${format}`;
-            link.click();
-          },
-          `image/${format}`,
-          1.0
-        );
+        canvas.toBlob((blob) => {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `screenshot.${format}`;
+          link.click();
+        }, `image/${format}`);
       } else {
-        alert("Invalid format! Please enter png, jpeg, or webp.");
+        alert("Invalid format! Use png, jpeg, or webp.");
       }
+    }
+  };
+
+  // Upload YAML to AWS S3
+  const uploadToAWS = async () => {
+    setUploadStatus("Uploading...");
+    const s3 = new S3Client({
+      region: "eu-north-1",
+      credentials: {
+        accessKeyId: "AKIAEXAMPLE1234567890",
+        secretAccessKey: "wJalrXUtnFEXAMPLEKEY/bPxRfiCYEXAMPLEKEY",
+      },
+    });
+
+    const yamlData = JSON.stringify({
+      meshParams,
+      physicalModels,
+      simulationParams,
+    });
+
+    const params = {
+      Bucket: "your-s3-bucket-name",
+      Key: "generated_case.yaml",
+      Body: yamlData,
+      ContentType: "application/x-yaml",
+    };
+
+    try {
+      const command = new PutObjectCommand(params);
+      await s3.send(command);
+      setUploadStatus("Upload successful!");
+    } catch (error) {
+      console.error("AWS Upload Error:", error);
+      setUploadStatus("Upload failed!");
     }
   };
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Header Component */}
       <Header backToLanding />
-
-      {/* Profile Theme Selector */}
       <div style={{ padding: "10px", background: "#000", color: "white", display: "flex", justifyContent: "flex-end" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* <label style={{ fontWeight: "bold" }}>Profile Theme:</label> */}
-          <select
-            onChange={(e) => setBackground(e.target.value)}
-            style={{ padding: "5px", borderRadius: "4px" }}
-          >
+          <select onChange={(e) => setBackground(e.target.value)} style={selectStyle}>
             <option value="linear-gradient(black, gray)">Black to Gray</option>
             <option value="black">Black</option>
             <option value="lightgray">Light Gray</option>
@@ -136,16 +127,11 @@ function SplashCloud() {
             <option value="linear-gradient(orange, yellow)">Orange to Yellow</option>
             <option value="white">White</option>
           </select>
-          {/* Screenshot Button */}
-          <button onClick={saveScreenshot} style={screenshotButtonStyle}>
-            Save Snapshot
-          </button>
+          <button onClick={saveScreenshot} style={screenshotButtonStyle}>Save Snapshot</button>
+          <button onClick={uploadToAWS} style={awsButtonStyle}>Upload to AWS</button>
         </div>
       </div>
-
-      {/* Main Content */}
       <div style={{ flex: 1, display: "flex", position: "relative" }} ref={canvasRef}>
-        {/* Sidebar Component */}
         <Sidebar
           fileInputRef={fileInputRef}
           setBackground={setBackground}
@@ -157,93 +143,34 @@ function SplashCloud() {
           setPhysicalModels={setPhysicalModels}
           setSimulationParams={setSimulationParams}
         />
-
-        {/* 3D Canvas */}
-        <Canvas
-          style={{
-            flex: 1,
-            width: "100%",
-            height: "100%",
-            background: background,
-          }}
-        >
-          {/* Lighting */}
+        <Canvas style={{ flex: 1, width: "100%", height: "100%", background }}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} intensity={1.5} />
-          <directionalLight position={[-10, -10, -10]} intensity={1.0} />
-
-          {/* Grid and Axes */}
           <gridHelper args={[8, 16]} />
           {axesVisible && <CustomAxes />}
           {axesVisible && <AxisLabels />}
           <ReferenceBox />
-
-          {/* Orbit Controls */}
           <OrbitControls ref={controlsRef} enableRotate enablePan enableZoom makeDefault />
-
-          {/* STL File Viewer */}
           {fileUrl && <STLViewer fileUrl={fileUrl} />}
         </Canvas>
-
-        {/* Generate Case and View Buttons */}
-        <div style={{ position: "absolute", bottom: 20, right: 20, display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ position: "relative", textAlign: "center" }}>
-            <GenerateCase meshParams={meshParams} physicalModels={physicalModels} simulationParams={simulationParams} />
-            <div
-              style={{
-                position: "absolute",
-                top: "-30px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                color: "white",
-                background: "rgba(0, 0, 0, 0.7)",
-                padding: "5px",
-                borderRadius: "5px",
-                fontSize: "12px",
-                visibility: "hidden",
-                transition: "visibility 0.3s",
-              }}
-              className="tooltip"
-            >
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            <button onClick={() => handleSetView("X")} style={viewButtonStyle}>
-              +X
-            </button>
-            <button onClick={() => handleSetView("Y")} style={viewButtonStyle}>
-              +Y
-            </button>
-            <button onClick={() => handleSetView("Z")} style={viewButtonStyle}>
-              +Z
-            </button>
+        <div style={buttonContainerStyle}>
+          <GenerateCase meshParams={meshParams} physicalModels={physicalModels} simulationParams={simulationParams} />
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => handleSetView("X")} style={viewButtonStyle}>+X</button>
+            <button onClick={() => handleSetView("Y")} style={viewButtonStyle}>+Y</button>
+            <button onClick={() => handleSetView("Z")} style={viewButtonStyle}>+Z</button>
           </div>
         </div>
       </div>
+      <p style={{ textAlign: "center", color: "white" }}>{uploadStatus}</p>
     </div>
   );
 }
 
-const viewButtonStyle = {
-  padding: "8px 12px",
-  background: "gray",
-  color: "white",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: "bold",
-  cursor: "pointer",
-  transition: "background 0.3s",
-};
-
-const screenshotButtonStyle = {
-  padding: "8px 12px",
-  background: "darkcyan",
-  color: "white",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: "bold",
-  cursor: "pointer",
-  transition: "background 0.3s",
-};
+const selectStyle = { padding: "5px", borderRadius: "4px" };
+const screenshotButtonStyle = { padding: "8px 12px", background: "darkcyan", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
+const awsButtonStyle = { padding: "8px 12px", background: "darkorange", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
+const buttonContainerStyle = { position: "absolute", bottom: 20, right: 20, display: "flex", flexDirection: "column", gap: "10px" };
+const viewButtonStyle = { padding: "8px 12px", background: "gray", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" };
 
 export default SplashCloud;
