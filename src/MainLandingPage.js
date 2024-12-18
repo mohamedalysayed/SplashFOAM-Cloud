@@ -25,6 +25,8 @@ function MainLandingPage() {
   // Select the appropriate image based on dark mode
   const cfdToolImage = isDarkMode ? cfdToolImageDark : cfdToolImageLight;
 
+  console.log("Current CFD Tool Image Path:", cfdToolImage); // Debugging
+
   return (
     <div
       style={{
@@ -156,10 +158,9 @@ function MainLandingPage() {
           padding: "20px",
         }}
       >
-        {/* Title and Description */}
         <div style={{ marginBottom: "30px" }}>
           <h1 style={{ fontSize: "36px", fontWeight: "bold", marginBottom: "10px" }}>
-            An Online Framework for OpenFOAM Users
+            An Online Case Generator for OpenFOAM Users
           </h1>
           <p
             style={{
@@ -188,7 +189,7 @@ function MainLandingPage() {
         {/* Image */}
         <div style={{ marginBottom: "20px" }}>
           <img
-            src={cfdToolImage} // Dynamically switch image
+            src={cfdToolImage}
             alt="CFD Visualization"
             style={{
               maxWidth: "90%",
@@ -197,7 +198,11 @@ function MainLandingPage() {
               boxShadow: isDarkMode ? "0px 6px 8px rgba(0, 0, 0, 0.2)" : "none",
               backgroundColor: isDarkMode ? "transparent" : "#f8f9fa",
               opacity: isDarkMode ? 1 : 0.98, // Subtle blending effect
-              border: isDarkMode ? "none" : "1px solid #f8f9fa", // Light border for blending
+              border: isDarkMode ? "none" : "1px solid #f8f9fa",
+            }}
+            onError={(e) => {
+              console.error("Image failed to load:", e.target.src);
+              e.target.style.display = "none"; // Hide image if it fails to load
             }}
           />
         </div>
@@ -205,7 +210,7 @@ function MainLandingPage() {
         {/* Get Started Button */}
         <button
           onClick={() => {
-            console.log("Navigating to /splashcloud"); // Debugging log
+            console.log("Navigating to /splashcloud");
             navigate("/splashcloud");
           }}
           style={{
